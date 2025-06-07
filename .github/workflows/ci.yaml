@@ -1,0 +1,40 @@
+name: "CI"
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.0'
+          extensions: curl, json, xml, xdebug
+        
+      - name: Install Composer dependencies
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Lint code
+        run: ./vendor/bin/parallel-lint src tests
+
+      - name: Coding Standards Fixer
+        run: ./vendor/bin/php-cs-fixer check
+
+      - name: Static Analysis
+        run: ./vendor/bin/phpstan
+
+      - name: Run Tests
+        run: ./vendor/bin/phpunit
+
+      - name: Mutation Testing
+        run: ./vendor/bin/infection
