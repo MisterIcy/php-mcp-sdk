@@ -1,0 +1,22 @@
+{
+    "name": "PHP8.0 with Xdebug",
+    "build": {
+        "dockerfile": "Dockerfile",
+    },
+    "customizations": {
+        "vscode": {
+            "settings": {
+                "php.validate.executablePath": "/usr/local/bin/php",
+            },
+            "extensions": [
+                "higoka.php-cs-fixer",
+                "sanderronde.phpstan-vscode",
+                "calebporzio.better-phpunit",
+                "bmewburn.vscode-intelephense-client",
+                "xdebug.php-pack"
+            ]
+        }
+    },
+    "postCreateCommand": "composer install",
+    "remoteUser": "vscode"
+}
