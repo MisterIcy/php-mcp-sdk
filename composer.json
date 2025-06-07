@@ -3,12 +3,12 @@
     "description": "Unofficial PHP Model Context Protocol SDK",
     "autoload": {
         "psr-4": {
-            "Mistericy\\PhpMcpSdk\\": "src/"
+            "MisterIcy\\PhpMcpSdk\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Mistericy\\PhpMcpSdk\\Tests\\": "tests/"
+            "MisterIcy\\PhpMcpSdk\\Tests\\": "tests/"
         }
     },
     "authors": [
