@@ -6,7 +6,7 @@ namespace MisterIcy\PhpMcpSdk\Message;
 
 use MisterIcy\PhpMcpSdk\Common\NonEmptyString;
 
-final class Notification extends Message
+final class Notification implements MessageInterface
 {
     /**
      * Creates a new JSON-RPC 2.0 notification message.
@@ -15,10 +15,12 @@ final class Notification extends Message
      * @param array<string, mixed> $params The parameters for the notification.
      */
     public function __construct(
-        NonEmptyString $method,
+        protected NonEmptyString $method,
         private array $params = []
     ) {
-        parent::__construct($method);
+        if (str_starts_with($method->getValue(), 'rpc.')) {
+            throw new \RuntimeException('Method names cannot start with "rpc."');
+        }
     }
 
     /**
@@ -42,5 +44,10 @@ final class Notification extends Message
             'method' => $this->method->getValue(),
             'params' => $this->params,
         ];
+    }
+
+    public function getMethod(): NonEmptyString
+    {
+        return $this->method;
     }
 }

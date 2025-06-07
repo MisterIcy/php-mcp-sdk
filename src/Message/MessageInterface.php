@@ -21,14 +21,4 @@ interface MessageInterface extends JsonSerializable
      * @since 0.1.0
      */
     public const JSON_RPC_VERSION = '2.0';
-
-    /**
-     * Returns the name of the method to be invoked.
-     *
-     * @throws \InvalidArgumentException If the method name is empty,
-     * @throws \RuntimeException If the method name is not a valid JSON-RPC method name.
-     * @since 0.1.0
-     * @return NonEmptyString The method name as a non-empty string.
-     */
-    public function getMethod(): NonEmptyString;
 }

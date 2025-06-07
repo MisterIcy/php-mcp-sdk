@@ -7,7 +7,7 @@ namespace MisterIcy\PhpMcpSdk\Message;
 use MisterIcy\PhpMcpSdk\Common\Number;
 use MisterIcy\PhpMcpSdk\Common\NonEmptyString;
 
-final class Request extends Message
+final class Request implements MessageInterface
 {
     /**
      * Creates a new JSON-RPC 2.0 request message.
@@ -18,10 +18,12 @@ final class Request extends Message
      */
     public function __construct(
         private NonEmptyString|Number $id,
-        NonEmptyString $method,
+        protected NonEmptyString $method,
         private array $params = []
     ) {
-        parent::__construct($method);
+        if (str_starts_with($method->getValue(), 'rpc.')) {
+            throw new \RuntimeException('Method names cannot start with "rpc."');
+        }
     }
 
     public function getId(): NonEmptyString|Number
@@ -52,5 +54,10 @@ final class Request extends Message
             'method' => $this->method->getValue(),
             'params' => $this->params,
         ];
+    }
+
+    public function getMethod(): NonEmptyString
+    {
+        return $this->method;
     }
 }

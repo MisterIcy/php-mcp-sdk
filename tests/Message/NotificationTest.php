@@ -10,7 +10,6 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * @covers \MisterIcy\PhpMcpSdk\Message\Notification
- * @covers \MisterIcy\PhpMcpSdk\Message\Message
  * @uses \MisterIcy\PhpMcpSdk\Common\NonEmptyString
  */
 final class NotificationTest extends TestCase

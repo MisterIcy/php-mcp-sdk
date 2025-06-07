@@ -11,7 +11,6 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * @covers \MisterIcy\PhpMcpSdk\Message\Request
- * @covers \MisterIcy\PhpMcpSdk\Message\Message
  * @uses \MisterIcy\PhpMcpSdk\Common\NonEmptyString
  * @uses \MisterIcy\PhpMcpSdk\Common\Number
  */
@@ -98,5 +97,13 @@ final class RequestTest extends TestCase
         $request = new Request($id, $method, $params);
 
         $this->assertSame($params, $request->getParams());
+    }
+
+    public function testCreateWithInvalidMethodThrowsException(): void
+    {
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('Method names cannot start with "rpc."');
+
+        new Request(new NonEmptyString('123'), new NonEmptyString('rpc.invalidMethod'));
     }
 }
