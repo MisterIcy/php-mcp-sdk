@@ -30,11 +30,13 @@
         "phpstan/extension-installer": "*",
         "phpstan/phpstan-webmozart-assert": "*",
         "phpstan/phpstan-phpunit": "*",
-        "deptrac/deptrac": "*"
+        "deptrac/deptrac": "*",
+        "infection/infection": "^0.26.16"
     },
     "config": {
         "allow-plugins": {
-            "phpstan/extension-installer": true
+            "phpstan/extension-installer": true,
+            "infection/extension-installer": true
         }
     }
 }
