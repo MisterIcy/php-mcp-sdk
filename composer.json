@@ -38,5 +38,9 @@
             "phpstan/extension-installer": true,
             "infection/extension-installer": true
         }
+    },
+    "scripts": {
+        "check": "vendor/bin/php-cs-fixer check",
+        "fix": "vendor/bin/php-cs-fixer fix"
     }
 }

@@ -2,96 +2,87 @@
 
 declare(strict_types=1);
 
-namespace MisterIcy\PhpMcpSdk\Tests\Message;
-
 use MisterIcy\PhpMcpSdk\Common\NonEmptyString;
-use MisterIcy\PhpMcpSdk\Common\Error;
-use MisterIcy\PhpMcpSdk\Message\Response;
 use MisterIcy\PhpMcpSdk\Common\Number;
+use MisterIcy\PhpMcpSdk\Message\Error;
+use MisterIcy\PhpMcpSdk\Message\Response;
+use MisterIcy\PhpMcpSdk\Message\JsonRpcMessageInterface;
 use PHPUnit\Framework\TestCase;
 
 /**
-  * @covers \MisterIcy\PhpMcpSdk\Message\Response
-  * @uses \MisterIcy\PhpMcpSdk\Common\NonEmptyString
-  * @uses \MisterIcy\PhpMcpSdk\Common\Number
-  * @uses \MisterIcy\PhpMcpSdk\Common\Error
-  */
+ * @covers \MisterIcy\PhpMcpSdk\Message\Response
+ * @uses \MisterIcy\PhpMcpSdk\Common\NonEmptyString
+ * @uses \MisterIcy\PhpMcpSdk\Common\Number
+ * @uses \MisterIcy\PhpMcpSdk\Message\Error
+ */
 final class ResponseTest extends TestCase
 {
-    public function testCreateWithIdAndResult(): void
+    public function testConstructorThrowsIfBothErrorAndResultNull(): void
     {
-        $id = new NonEmptyString('123');
-        $result = ['key' => 'value'];
-        $response = new \MisterIcy\PhpMcpSdk\Message\Response($id, $result);
-
-        $this->assertSame('123', $response->getId()->getValue());
-        $this->assertSame($result, $response->getResult());
+        $id = new NonEmptyString('id');
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Either error or result must be provided.');
+        new Response($id, null, null);
     }
 
-    public function testCreateWithIdAndError(): void
+    public function testConstructorThrowsIfBothErrorAndResultProvided(): void
     {
-        $id = new NonEmptyString('123');
-        $error = new Error(new Number(-32603), new NonEmptyString('Internal error'));
-        $response = new \MisterIcy\PhpMcpSdk\Message\Response($id, null, $error);
+        $id = new NonEmptyString('id');
+        $error = new Error(new Number(-1), new NonEmptyString('err'));
+        $result = ['foo' => 'bar'];
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Only one of error or result can be provided.');
+        new Response($id, $error, $result);
+    }
 
-        $this->assertSame('123', $response->getId()->getValue());
-        $this->assertNull($response->getResult());
+    public function testGettersWithError(): void
+    {
+        $id = new NonEmptyString('id');
+        $error = new Error(new Number(-1), new NonEmptyString('err'));
+        $response = new Response($id, $error, null);
+        $this->assertSame($id, $response->getId());
         $this->assertSame($error, $response->getError());
+        $this->assertNull($response->getResult());
+        $this->assertSame(JsonRpcMessageInterface::JSON_RPC_VERSION, $response->getJsonRpcVersion());
     }
 
-    public function testCreateWithIdErrorAndResultThrowsException(): void
+    public function testGettersWithResult(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Only one of result or error can be provided.');
-
-        $id = new NonEmptyString('123');
-        $result = ['key' => 'value'];
-        $error = new Error(new Number(-32603), new NonEmptyString('Internal error'));
-
-        new \MisterIcy\PhpMcpSdk\Message\Response($id, $result, $error);
-    }
-
-    public function testCreateWitoutResultOrErrorThrowsException(): void
-    {
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Either result or error must be provided.');
-
-        $id = new NonEmptyString('123');
-
-        new \MisterIcy\PhpMcpSdk\Message\Response($id);
-    }
-
-    public function testJsonSerializeWithResult(): void
-    {
-        $id = new NonEmptyString('123');
-        $result = ['key' => 'value'];
-        $response = new \MisterIcy\PhpMcpSdk\Message\Response($id, $result);
-
-        $expectedJson = [
-            'jsonrpc' => \MisterIcy\PhpMcpSdk\Message\Response::JSON_RPC_VERSION,
-            'id' => '123',
-            'result' => $result,
-        ];
-
-        $this->assertSame($expectedJson, $response->jsonSerialize());
+        $id = new NonEmptyString('id2');
+        $result = ['foo' => 'bar'];
+        $response = new Response($id, null, $result);
+        $this->assertSame($id, $response->getId());
+        $this->assertNull($response->getError());
+        $this->assertSame($result, $response->getResult());
     }
 
     public function testJsonSerializeWithError(): void
     {
-        $id = new NonEmptyString('123');
-        $error = new Error(new Number(-32603), new NonEmptyString('Internal error'));
-        $response = new \MisterIcy\PhpMcpSdk\Message\Response($id, null, $error);
-
-        $expectedJson = [
-            'jsonrpc' => \MisterIcy\PhpMcpSdk\Message\Response::JSON_RPC_VERSION,
-            'id' => '123',
+        $id = new NonEmptyString('id');
+        $error = new Error(new Number(-1), new NonEmptyString('err'), ['info' => 123]);
+        $response = new Response($id, $error, null);
+        $expected = [
+            'jsonrpc' => JsonRpcMessageInterface::JSON_RPC_VERSION,
+            'id' => 'id',
             'error' => [
-                'code' => -32603,
-                'message' => 'Internal error',
-                'data' => null,
+                'code' => -1,
+                'message' => 'err',
+                'data' => ['info' => 123],
             ],
         ];
+        $this->assertSame($expected, $response->jsonSerialize());
+    }
 
-        $this->assertSame($expectedJson, $response->jsonSerialize());
+    public function testJsonSerializeWithResult(): void
+    {
+        $id = new NonEmptyString('id3');
+        $result = ['foo' => 'bar'];
+        $response = new Response($id, null, $result);
+        $expected = [
+            'jsonrpc' => JsonRpcMessageInterface::JSON_RPC_VERSION,
+            'id' => 'id3',
+            'result' => ['foo' => 'bar'],
+        ];
+        $this->assertSame($expected, $response->jsonSerialize());
     }
 }

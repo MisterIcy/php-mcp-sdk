@@ -2,11 +2,10 @@
 
 declare(strict_types=1);
 
-namespace MisterIcy\PhpMcpSdk\Tests\Message;
-
 use MisterIcy\PhpMcpSdk\Common\NonEmptyString;
 use MisterIcy\PhpMcpSdk\Common\Number;
 use MisterIcy\PhpMcpSdk\Message\Request;
+use MisterIcy\PhpMcpSdk\Message\JsonRpcMessageInterface;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -16,94 +15,65 @@ use PHPUnit\Framework\TestCase;
  */
 final class RequestTest extends TestCase
 {
-    public function testCreateWithValidIdMethodAndParams(): void
-    {
-        $id = new NonEmptyString('123');
-        $method = new NonEmptyString('testMethod');
-        $params = ['param1' => 'value1', 'param2' => 'value2'];
-        $request = new Request($id, $method, $params);
-        $this->assertSame('123', $request->getId()->getValue());
-        $this->assertSame('testMethod', $request->getMethod()->getValue());
-        $this->assertSame($params, $request->getParams());
-    }
-
-    public function testCreateWithNumberId(): void
+    public function testConstructorAndGettersWithNumberId(): void
     {
         $id = new Number(123);
         $method = new NonEmptyString('testMethod');
-        $params = ['param1' => 'value1', 'param2' => 'value2'];
+        $params = ['foo' => 'bar'];
         $request = new Request($id, $method, $params);
-        $this->assertSame(123, $request->getId()->getValue());
-        $this->assertSame('testMethod', $request->getMethod()->getValue());
+
+        $this->assertSame($id, $request->getId());
+        $this->assertSame($method, $request->getMethod());
         $this->assertSame($params, $request->getParams());
+        $this->assertSame(JsonRpcMessageInterface::JSON_RPC_VERSION, $request->getJsonRpcVersion());
     }
 
-    public function testJsonSerialize(): void
+    public function testConstructorAndGettersWithNonEmptyStringId(): void
     {
-        $id = new NonEmptyString('123');
+        $id = new NonEmptyString('abc');
         $method = new NonEmptyString('testMethod');
-        $params = ['param1' => 'value1', 'param2' => 'value2'];
+        $params = null;
         $request = new Request($id, $method, $params);
 
-        $expectedJson = [
-            'jsonrpc' => Request::JSON_RPC_VERSION,
-            'id' => '123',
-            'method' => 'testMethod',
-            'params' => $params,
-        ];
+        $this->assertSame($id, $request->getId());
+        $this->assertSame($method, $request->getMethod());
+        $this->assertNull($request->getParams());
+    }
 
-        $this->assertSame($expectedJson, $request->jsonSerialize());
+    public function testConstructorThrowsForReservedMethodName(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Method names cannot start with "rpc." as it is reserved for internal use.');
+        $id = new Number(1);
+        $method = new NonEmptyString('rpc.internal');
+        new Request($id, $method);
+    }
+
+    public function testJsonSerializeWithParams(): void
+    {
+        $id = new Number(42);
+        $method = new NonEmptyString('foo');
+        $params = ['a' => 1, 'b' => 2];
+        $request = new Request($id, $method, $params);
+        $expected = [
+            'jsonrpc' => JsonRpcMessageInterface::JSON_RPC_VERSION,
+            'id' => 42,
+            'method' => 'foo',
+            'params' => ['a' => 1, 'b' => 2],
+        ];
+        $this->assertSame($expected, $request->jsonSerialize());
     }
 
     public function testJsonSerializeWithoutParams(): void
     {
-        $id = new NonEmptyString('123');
-        $method = new NonEmptyString('testMethod');
+        $id = new NonEmptyString('id');
+        $method = new NonEmptyString('bar');
         $request = new Request($id, $method);
-
-        $expectedJson = [
-            'jsonrpc' => Request::JSON_RPC_VERSION,
-            'id' => '123',
-            'method' => 'testMethod',
-            'params' => [],
+        $expected = [
+            'jsonrpc' => JsonRpcMessageInterface::JSON_RPC_VERSION,
+            'id' => 'id',
+            'method' => 'bar',
         ];
-
-        $this->assertSame($expectedJson, $request->jsonSerialize());
-    }
-
-    public function testGetId(): void
-    {
-        $id = new NonEmptyString('123');
-        $method = new NonEmptyString('testMethod');
-        $request = new Request($id, $method);
-
-        $this->assertSame('123', $request->getId()->getValue());
-    }
-
-    public function testGetMethod(): void
-    {
-        $id = new NonEmptyString('123');
-        $method = new NonEmptyString('testMethod');
-        $request = new Request($id, $method);
-
-        $this->assertSame('testMethod', $request->getMethod()->getValue());
-    }
-
-    public function testGetParams(): void
-    {
-        $id = new NonEmptyString('123');
-        $method = new NonEmptyString('testMethod');
-        $params = ['param1' => 'value1', 'param2' => 'value2'];
-        $request = new Request($id, $method, $params);
-
-        $this->assertSame($params, $request->getParams());
-    }
-
-    public function testCreateWithInvalidMethodThrowsException(): void
-    {
-        $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Method names cannot start with "rpc."');
-
-        new Request(new NonEmptyString('123'), new NonEmptyString('rpc.invalidMethod'));
+        $this->assertSame($expected, $request->jsonSerialize());
     }
 }

@@ -4,26 +4,26 @@ declare(strict_types=1);
 
 namespace MisterIcy\PhpMcpSdk\Message;
 
-use MisterIcy\PhpMcpSdk\Common\Number;
 use MisterIcy\PhpMcpSdk\Common\NonEmptyString;
+use MisterIcy\PhpMcpSdk\Common\Number;
 
-final class Request implements MessageInterface
+final class Request implements JsonRpcMessageInterface
 {
-    /**
-     * Creates a new JSON-RPC 2.0 request message.
-     *
-     * @param NonEmptyString|Number $id The unique identifier for the request.
-     * @param NonEmptyString $method The method name to be invoked.
-     * @param array<string, mixed> $params The parameters for the request.
-     */
     public function __construct(
         private NonEmptyString|Number $id,
-        protected NonEmptyString $method,
-        private array $params = []
+        private NonEmptyString $method,
+        private ?array $params = null
     ) {
         if (str_starts_with($method->getValue(), 'rpc.')) {
-            throw new \RuntimeException('Method names cannot start with "rpc."');
+            throw new \InvalidArgumentException(
+                'Method names cannot start with "rpc." as it is reserved for internal use.'
+            );
         }
+    }
+
+    public function getJsonRpcVersion(): string
+    {
+        return JsonRpcMessageInterface::JSON_RPC_VERSION;
     }
 
     public function getId(): NonEmptyString|Number
@@ -31,33 +31,28 @@ final class Request implements MessageInterface
         return $this->id;
     }
 
-    /**
-     * Returns the parameters for the request.
-     *
-     * @return array<string, mixed> The parameters for the request.
-     */
-    public function getParams(): array
+    public function getMethod(): NonEmptyString
+    {
+        return $this->method;
+    }
+
+    public function getParams(): ?array
     {
         return $this->params;
     }
 
-    /**
-     * Returns the JSON representation of the request message.
-     *
-     * @return array<string, mixed> The JSON-RPC 2.0 request message.
-     */
-    public function jsonSerialize(): array
+    public function jsonSerialize(): mixed
     {
-        return [
-            'jsonrpc' => self::JSON_RPC_VERSION,
+        $data = [
+            'jsonrpc' => $this->getJsonRpcVersion(),
             'id' => $this->id->getValue(),
             'method' => $this->method->getValue(),
-            'params' => $this->params,
         ];
-    }
 
-    public function getMethod(): NonEmptyString
-    {
-        return $this->method;
+        if ($this->params !== null) {
+            $data['params'] = $this->params;
+        }
+
+        return $data;
     }
 }

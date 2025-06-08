@@ -2,32 +2,42 @@
 
 declare(strict_types=1);
 
-namespace MisterIcy\PhpMcpSdk\Tests\Common;
-
-use PHPUnit\Framework\TestCase;
 use MisterIcy\PhpMcpSdk\Common\Number;
+use MisterIcy\PhpMcpSdk\Common\ValueObjectInterface;
+use PHPUnit\Framework\TestCase;
 
 /**
  * @covers \MisterIcy\PhpMcpSdk\Common\Number
  */
 final class NumberTest extends TestCase
 {
-    public function testCreateWithValidInteger(): void
+    public function testGetValueReturnsConstructorValue(): void
     {
         $number = new Number(42);
         $this->assertSame(42, $number->getValue());
-        $this->assertFalse($number->isEmpty());
     }
 
-    public function testGetValue(): void
+    public function testEqualsReturnsTrueForSameValue(): void
     {
-        $number = new Number(100);
-        $this->assertSame(100, $number->getValue());
+        $a = new Number(10);
+        $b = new Number(10);
+        $this->assertTrue($a->equals($b));
     }
 
-    public function testIsEmpty(): void
+    public function testEqualsReturnsFalseForDifferentValue(): void
     {
-        $number = new Number(0);
-        $this->assertFalse($number->isEmpty()); // A Number is never empty by definition.
+        $a = new Number(10);
+        $b = new Number(20);
+        $this->assertFalse($a->equals($b));
+    }
+
+    public function testEqualsReturnsFalseForDifferentType(): void
+    {
+        $a = new Number(10);
+        $mock = $this->getMockBuilder(ValueObjectInterface::class)
+            ->getMock();
+        // Cast mock to ValueObjectInterface to satisfy type checker
+        /** @var ValueObjectInterface $mock */
+        $this->assertFalse($a->equals($mock));
     }
 }

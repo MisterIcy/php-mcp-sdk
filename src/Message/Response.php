@@ -4,24 +4,32 @@ declare(strict_types=1);
 
 namespace MisterIcy\PhpMcpSdk\Message;
 
-use MisterIcy\PhpMcpSdk\Common\Error;
 use MisterIcy\PhpMcpSdk\Common\NonEmptyString;
 use MisterIcy\PhpMcpSdk\Common\Number;
 
-final class Response implements MessageInterface
+final class Response implements JsonRpcMessageInterface
 {
     public function __construct(
         private NonEmptyString|Number $id,
-        private ?array $result = null,
-        private ?Error $error = null
+        private ?Error $error = null,
+        private ?array $result = null
     ) {
-        if ($result === null && $error === null) {
-            throw new \InvalidArgumentException('Either result or error must be provided.');
+        if ($error === null && $result === null) {
+            throw new \InvalidArgumentException(
+                'Either error or result must be provided.'
+            );
         }
 
-        if ($result !== null && $error !== null) {
-            throw new \InvalidArgumentException('Only one of result or error can be provided.');
+        if ($error !== null && $result !== null) {
+            throw new \InvalidArgumentException(
+                'Only one of error or result can be provided.'
+            );
         }
+    }
+
+    public function getJsonRpcVersion(): string
+    {
+        return JsonRpcMessageInterface::JSON_RPC_VERSION;
     }
 
     public function getId(): NonEmptyString|Number
@@ -29,33 +37,29 @@ final class Response implements MessageInterface
         return $this->id;
     }
 
-    public function getResult(): ?array
-    {
-        return $this->result;
-    }
-
     public function getError(): ?Error
     {
         return $this->error;
     }
 
-    public function jsonSerialize(): array
+    public function getResult(): ?array
     {
-        $response = [
-            'jsonrpc' => self::JSON_RPC_VERSION,
+        return $this->result;
+    }
+
+    public function jsonSerialize(): mixed
+    {
+        $data = [
+            'jsonrpc' => $this->getJsonRpcVersion(),
             'id' => $this->id->getValue(),
         ];
 
-        if ($this->result !== null) {
-            $response['result'] = $this->result;
-        } elseif ($this->error !== null) {
-            $response['error'] = [
-                'code' => $this->error->getCode()->getValue(),
-                'message' => $this->error->getMessage()->getValue(),
-                'data' => $this->error->getData(),
-            ];
+        if ($this->error !== null) {
+            $data['error'] = $this->error->jsonSerialize();
+        } elseif ($this->result !== null) {
+            $data['result'] = $this->result;
         }
 
-        return $response;
+        return $data;
     }
 }

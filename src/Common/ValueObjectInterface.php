@@ -7,16 +7,19 @@ namespace MisterIcy\PhpMcpSdk\Common;
 interface ValueObjectInterface
 {
     /**
-     * Returns the value of the value object.
+     * Get the value of the value object.
      *
      * @return mixed The value contained in the value object.
+     * @since 0.1.0
      */
     public function getValue(): mixed;
 
     /**
-     * Checks if the value object is empty.
+     * Check if this value object is equal to another value object.
      *
-     * @return bool True if the value object is empty or evaluates as empty in php, false otherwise.
+     * @param ValueObjectInterface $other The other value object to compare with.
+     * @return bool True if the value objects are equal, false otherwise.
+     * @since 0.1.0
      */
-    public function isEmpty(): bool;
+    public function equals(ValueObjectInterface $other): bool;
 }

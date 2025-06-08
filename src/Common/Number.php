@@ -6,9 +6,14 @@ namespace MisterIcy\PhpMcpSdk\Common;
 
 final class Number implements ValueObjectInterface
 {
-    public function __construct(private int $value)
-    {
-
+    /**
+     * Get the value of the number.
+     *
+     * @param int $value The numeric value.
+     */
+    public function __construct(
+        private int $value
+    ) {
     }
 
     public function getValue(): int
@@ -16,8 +21,11 @@ final class Number implements ValueObjectInterface
         return $this->value;
     }
 
-    public function isEmpty(): bool
+    public function equals(ValueObjectInterface $other): bool
     {
-        return false; // A Number is never empty by definition.
+        if (!$other instanceof Number) {
+            return false;
+        }
+        return $this->value === $other->getValue();
     }
 }

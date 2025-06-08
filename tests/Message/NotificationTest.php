@@ -2,10 +2,9 @@
 
 declare(strict_types=1);
 
-namespace MisterIcy\PhpMcpSdk\Tests\Message;
-
-use MisterIcy\PhpMcpSdk\Message\Notification;
 use MisterIcy\PhpMcpSdk\Common\NonEmptyString;
+use MisterIcy\PhpMcpSdk\Message\Notification;
+use MisterIcy\PhpMcpSdk\Message\JsonRpcMessageInterface;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -14,61 +13,55 @@ use PHPUnit\Framework\TestCase;
  */
 final class NotificationTest extends TestCase
 {
-    public function testCreateWithValidMethodAndParams(): void
+    public function testConstructorAndGettersWithParams(): void
     {
         $method = new NonEmptyString('testMethod');
-        $params = ['param1' => 'value1', 'param2' => 'value2'];
-
+        $params = ['foo' => 'bar'];
         $notification = new Notification($method, $params);
 
-        $this->assertSame('testMethod', $notification->getMethod()->getValue());
+        $this->assertSame($method, $notification->getMethod());
         $this->assertSame($params, $notification->getParams());
+        $this->assertSame(JsonRpcMessageInterface::JSON_RPC_VERSION, $notification->getJsonRpcVersion());
     }
 
-    public function testJsonSerialize(): void
+    public function testConstructorAndGettersWithoutParams(): void
     {
         $method = new NonEmptyString('testMethod');
-        $params = ['param1' => 'value1', 'param2' => 'value2'];
+        $notification = new Notification($method);
 
+        $this->assertSame($method, $notification->getMethod());
+        $this->assertNull($notification->getParams());
+    }
+
+    public function testConstructorThrowsForReservedMethodName(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Method names cannot start with "rpc." as it is reserved for internal use.');
+        $method = new NonEmptyString('rpc.internal');
+        new Notification($method);
+    }
+
+    public function testJsonSerializeWithParams(): void
+    {
+        $method = new NonEmptyString('foo');
+        $params = ['a' => 1, 'b' => 2];
         $notification = new Notification($method, $params);
-
-        $expectedJson = [
-            'jsonrpc' => Notification::JSON_RPC_VERSION,
-            'method' => 'testMethod',
-            'params' => $params,
+        $expected = [
+            'jsonrpc' => JsonRpcMessageInterface::JSON_RPC_VERSION,
+            'method' => 'foo',
+            'params' => ['a' => 1, 'b' => 2],
         ];
-
-        $this->assertSame($expectedJson, $notification->jsonSerialize());
+        $this->assertSame($expected, $notification->jsonSerialize());
     }
 
     public function testJsonSerializeWithoutParams(): void
     {
-        $method = new NonEmptyString('testMethod');
-
+        $method = new NonEmptyString('bar');
         $notification = new Notification($method);
-
-        $expectedJson = [
-            'jsonrpc' => Notification::JSON_RPC_VERSION,
-            'method' => 'testMethod',
-            'params' => [],
+        $expected = [
+            'jsonrpc' => JsonRpcMessageInterface::JSON_RPC_VERSION,
+            'method' => 'bar',
         ];
-
-        $this->assertSame($expectedJson, $notification->jsonSerialize());
-    }
-
-    public function testGetMethod(): void
-    {
-        $method = new NonEmptyString('testMethod');
-        $notification = new Notification($method);
-
-        $this->assertSame('testMethod', $notification->getMethod()->getValue());
-    }
-
-    public function testCreateNotificationWithInvalidMethodThrowsException(): void
-    {
-        $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Method names cannot start with "rpc."');
-
-        new Notification(new NonEmptyString('rpc.invalidMethod'));
+        $this->assertSame($expected, $notification->jsonSerialize());
     }
 }
