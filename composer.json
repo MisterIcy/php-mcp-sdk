@@ -3,7 +3,8 @@
     "description": "Unofficial PHP Model Context Protocol SDK",
     "autoload": {
         "psr-4": {
-            "MisterIcy\\PhpMcpSdk\\": "src/"
+            "MisterIcy\\PhpMcpSdk\\": "src/",
+            "McpSdk\\": "src/"
         }
     },
     "autoload-dev": {
@@ -21,6 +22,10 @@
         "php": "^8.0",
         "ext-json": "*",
         "ext-curl": "*"
+    },
+    "suggest": {
+        "ext-pcntl": "For asynchronous message handling support",
+        "monolog/monolog": "For logging support"
     },
     "require-dev": {
         "friendsofphp/php-cs-fixer": "*",
@@ -41,6 +46,7 @@
     },
     "scripts": {
         "check": "vendor/bin/php-cs-fixer check",
-        "fix": "vendor/bin/php-cs-fixer fix"
+        "fix": "vendor/bin/php-cs-fixer fix",
+        "phpstan": "./vendor/bin/phpstan"
     }
 }
